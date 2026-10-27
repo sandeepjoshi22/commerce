@@ -1,0 +1,6 @@
+# Loaded on top of src/main/resources/application.yml by tests with @ActiveProfiles("test").
+# Uncomment to limit the connection pool for concurrency experiments:
+#spring:
+#  datasource:
+#    hikari:
+#      maximum-pool-size: 2
