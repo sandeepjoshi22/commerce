@@ -11,10 +11,9 @@ Single source of truth for what's done and what's next. Lives in the repo, updat
 - Missed days: resume from the parking note. No catch-up.
 
 ## Now
-- [ ] **M1-04 Pessimistic locking** — `SELECT ... FOR UPDATE` (`findByIdForUpdate`); results and experiment answers (reasoned, incl. deadlock) are in the lab note. No deadlock test by choice. → `docs/labs/02-fixing-oversell.md`
+- [ ] **M1-02 Atomic conditional update** — `UPDATE ... SET stock = stock - ? WHERE id = ? AND stock >= ?`; check rows affected. Prediction first.
 
 ## Next — M1 Inventory correctness (see `ROADMAP.md`; order can change)
-- [ ] **M1-02 Atomic conditional update** — `UPDATE ... SET stock = stock - ? WHERE id = ? AND stock >= ?`; check rows affected.
 - [ ] **M1-05 Isolation levels** — `REPEATABLE READ` / `SERIALIZABLE` serialization failures.
 - [ ] **M1-06 @Transactional traps** — self-invocation, private methods, checked-exception rollback, `REQUIRES_NEW`. Prove each with a test.
 - [ ] **M1-07 Compare all approaches + ADR** — correctness, throughput, failure behaviour, deadlock risk, with your numbers. Then the M1 exit check and flash-sale design exercise.
@@ -31,9 +30,10 @@ Single source of truth for what's done and what's next. Lives in the repo, updat
 - [x] **C00 Skeleton** — Gradle, Java 25, Boot 4, Flyway V1 product seed, Testcontainers smoke test. (2026-10-27)
 - [x] **M1-01 Oversell** — naive read-modify-write under 100 concurrent requests, stock 10; 79–83 units oversold. → `docs/labs/01-oversell.md` (2026-11-10)
 - [x] **M1-03 Optimistic locking** — `@Version` + retry; 0 oversold on all runs, lost sales without retry. → `docs/labs/02-fixing-oversell.md` step 1 (2026-11-10)
+- [x] **M1-04 Pessimistic locking** — `SELECT ... FOR UPDATE`; 10 sold, 0 conflicts, honest "out of stock". Deadlock explained by reasoning only (test dropped as too complex, not observed). → `docs/labs/02-fixing-oversell.md` step 2 (2026-11-11)
 
 ## Parking note
-Next: wrap up M1-04. Pessimistic locking (`findByIdForUpdate`) works and lab 02 step 2 is written; the deadlock test was dropped to keep the code simple. Re-read the lab 02 experiment answers, then move M1-04 to Done and start M1-02 (atomic update). Write the prediction in the lab note BEFORE running.
+Next: start M1-02 (atomic conditional update). Write the prediction in the lab note BEFORE running. Hand-write the repository query and check rows affected.
 
 ## DSA log (minimum ~3/week)
 | Week of | Problems | Pattern |
