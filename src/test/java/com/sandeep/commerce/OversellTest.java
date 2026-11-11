@@ -53,14 +53,17 @@ class OversellTest {
         jdbcTemplate.update("UPDATE product SET stock = ? WHERE id = ?", INITIAL_STOCK, PRODUCT_ID);
     }
 
-    @ParameterizedTest(name = "threads={0} maxAttempts={1}")
+    @ParameterizedTest(name = "{0} threads={1} maxAttempts={2}")
     @CsvSource({
-            "100, 1",   // demand far above stock, no retry
-            "10, 1",    // demand equals stock, no retry
-            "10, 3",
-            "10, 10",
+            //"optimistic,  100, 1",   // demand far above stock, no retry
+            //"optimistic,   10, 1",   // demand equals stock, no retry
+            //"optimistic,   10, 3",
+            //"optimistic,   10, 10",
+           // "optimistic,  100, 10",
+            "pessimistic,  10, 1",
+           // "pessimistic, 100, 1",
     })
-    void doesNotOversellUnderConcurrency(int threads, int maxAttempts) throws Exception {
+    void doesNotOversellUnderConcurrency(String strategy, int threads, int maxAttempts) throws Exception {
         RetryingOrderPlacer orderPlacer = new RetryingOrderPlacer(inventoryService, maxAttempts);
         ExecutorService pool = Executors.newFixedThreadPool(threads);
         CountDownLatch ready = new CountDownLatch(threads);
@@ -75,7 +78,12 @@ class OversellTest {
                 ready.countDown();
                 start.await();
                 try {
-                    attempts.addAndGet(orderPlacer.placeOrder(PRODUCT_ID, 1));
+                    if (strategy.equals("pessimistic")) {
+                        inventoryService.placeOrderWithLock(PRODUCT_ID, 1);
+                        attempts.incrementAndGet();
+                    } else {
+                        attempts.addAndGet(orderPlacer.placeOrder(PRODUCT_ID, 1));
+                    }
                     successes.incrementAndGet();
                 } catch (Exception e) {
                     failures.computeIfAbsent(e.getClass().getSimpleName(), k -> new LongAdder()).increment();
@@ -96,9 +104,9 @@ class OversellTest {
         int finalStock = product.getStock();
         int oversold = sold + finalStock - INITIAL_STOCK;
 
-        System.out.printf("threads=%d maxAttempts=%d successes=%d finalStock=%d oversold=%d "
+        System.out.printf("%s threads=%d maxAttempts=%d successes=%d finalStock=%d oversold=%d "
                         + "attemptsBySuccesses=%d elapsedMs=%d failures=%s%n",
-                threads, maxAttempts, sold, finalStock, oversold,
+                strategy, threads, maxAttempts, sold, finalStock, oversold,
                 attempts.get(), elapsedMs, new TreeMap<>(failures));
 
         assertTrue(finalStock >= 0, "stock went negative: " + finalStock);

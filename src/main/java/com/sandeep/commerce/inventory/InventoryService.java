@@ -22,4 +22,16 @@ public class InventoryService {
         product.updateStock(product.getStock() - qty);
     }
 
+    @Transactional
+    public void placeOrderWithLock(Long productId, int qty){
+        Product product = productRepository.findByIdForUpdate(productId)
+                .orElseThrow();
+
+        if(product.getStock() < qty) {
+            throw new IllegalArgumentException("Out of stock");
+        }
+
+        product.updateStock(product.getStock() - qty);
+    }
+
 }

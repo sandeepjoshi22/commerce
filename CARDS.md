@@ -3,6 +3,7 @@
 Single source of truth for what's done and what's next. Lives in the repo, updated at the end of every session.
 
 ## Rules
+- Card IDs follow `ROADMAP.md` (`M<module>-<nn>`). The roadmap says where a card fits; this file says what's active.
 - One card in **Now** at a time.
 - A card = question → prediction → experiment → result → lab note (`docs/labs/NN-name.md`).
 - New technology only enters when a card needs it. No card, no Kafka.
@@ -10,32 +11,29 @@ Single source of truth for what's done and what's next. Lives in the repo, updat
 - Missed days: resume from the parking note. No catch-up.
 
 ## Now
-- [ ] **C01 Oversell** — naive `placeOrder` under 100 concurrent requests, stock 10. Prediction first, then watch it fail. → `docs/labs/01-oversell.md`
+- [ ] **M1-04 Pessimistic locking** — `SELECT ... FOR UPDATE` (`findByIdForUpdate`); results and experiment answers (reasoned, incl. deadlock) are in the lab note. No deadlock test by choice. → `docs/labs/02-fixing-oversell.md`
 
-## Next (order can change; pick what's interesting)
-- [ ] **C02 Fix A: atomic update** — `UPDATE ... SET stock = stock - ? WHERE id = ? AND stock >= ?`; check rows affected.
-- [ ] **C03 Fix B: optimistic locking** — `@Version` + retry. What happens without retry? How many retries under contention?
-- [ ] **C04 Fix C: pessimistic locking** — `SELECT ... FOR UPDATE`. Compare A/B/C: correctness, throughput, failure behaviour, deadlock risk.
-- [ ] **C05 @Transactional traps** — self-invocation, private methods, checked-exception rollback. Prove each with a test.
-- [ ] **C06 Idempotent POST /orders** — `Idempotency-Key` header, unique constraint, concurrent double-submit test. No check-then-insert.
-- [ ] **C07 Orders + reservations** — `orders`, `order_items`, `inventory_reservations`; separate order / inventory states.
-- [ ] **C08 Slow payment** — fake provider with latency. Hold the tx across the call and observe pool exhaustion; then fix.
-- [ ] **C09 Compensation** — payment fails → reservation released. What if the release itself fails?
-- [ ] **C10 Dual write** — order committed, event lost. Reproduce, then fix with a transactional outbox.
+## Next — M1 Inventory correctness (see `ROADMAP.md`; order can change)
+- [ ] **M1-02 Atomic conditional update** — `UPDATE ... SET stock = stock - ? WHERE id = ? AND stock >= ?`; check rows affected.
+- [ ] **M1-05 Isolation levels** — `REPEATABLE READ` / `SERIALIZABLE` serialization failures.
+- [ ] **M1-06 @Transactional traps** — self-invocation, private methods, checked-exception rollback, `REQUIRES_NEW`. Prove each with a test.
+- [ ] **M1-07 Compare all approaches + ADR** — correctness, throughput, failure behaviour, deadlock risk, with your numbers. Then the M1 exit check and flash-sale design exercise.
 
-## Later (pulled in only by a card)
-- Kafka + idempotent consumer (`processed_events`)
-- Redis as cache (never system of record)
-- AI thread: order-support assistant, tool calling against own APIs, structured output, small eval set, cost/latency per request
-- Auth / Spring Security
-- Observability (metrics, tracing)
-- Docker image, K8s, AWS
+## Later (one module at a time; cards are pulled from `ROADMAP.md` when the previous module's exit check passes)
+- **M2** Orders API & users — Spring Security, cart, `POST /orders`, `Idempotency-Key`, N+1
+- **M3** Checkout & payments — states, reservations + expiry, slow payment / pool exhaustion, compensation, unknown outcome
+- **M4** Reliable events — dual write, outbox, Kafka, idempotent consumer, DLT
+- **M5** AI order-support assistant — Spring AI, tools, RAG, evals, guardrails
+- **M6** Performance & observability — k6, indexes, Redis cache, metrics/tracing
+- **M7** Deploy & failure lab — Docker, K8s, AWS mapping, incident reports
 
 ## Done
 - [x] **C00 Skeleton** — Gradle, Java 25, Boot 4, Flyway V1 product seed, Testcontainers smoke test. (2026-10-27)
+- [x] **M1-01 Oversell** — naive read-modify-write under 100 concurrent requests, stock 10; 79–83 units oversold. → `docs/labs/01-oversell.md` (2026-11-10)
+- [x] **M1-03 Optimistic locking** — `@Version` + retry; 0 oversold on all runs, lost sales without retry. → `docs/labs/02-fixing-oversell.md` step 1 (2026-11-10)
 
 ## Parking note
-Next: write the C01 concurrency test (ExecutorService + CountDownLatch). Write the prediction in the lab note BEFORE running.
+Next: wrap up M1-04. Pessimistic locking (`findByIdForUpdate`) works and lab 02 step 2 is written; the deadlock test was dropped to keep the code simple. Re-read the lab 02 experiment answers, then move M1-04 to Done and start M1-02 (atomic update). Write the prediction in the lab note BEFORE running.
 
 ## DSA log (minimum ~3/week)
 | Week of | Problems | Pattern |
